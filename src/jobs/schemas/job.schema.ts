@@ -15,6 +15,7 @@ export class Job {
   company: {
     _id: mongoose.Schema.Types.ObjectId;
     name: string;
+    logo: string;
   };
 
   @Prop()
@@ -27,7 +28,7 @@ export class Job {
   quantity: number;
 
   @Prop()
-  lever: string;
+  level: string;
 
   @Prop()
   description: string;

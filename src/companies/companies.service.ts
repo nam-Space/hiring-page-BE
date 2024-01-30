@@ -70,14 +70,21 @@ export class CompaniesService {
     );
   }
 
-  async remove(id: mongoose.Schema.Types.ObjectId, user: IUser) {
-    await this.companyModel.updateOne({
-      _id: id,
-      deletedBy: {
-        _id: user._id,
-        email: user.email,
+  async remove(id: string, user: IUser) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return 'Id is invalid!';
+    }
+    await this.companyModel.updateOne(
+      {
+        _id: id,
       },
-    });
+      {
+        deletedBy: {
+          _id: user._id,
+          email: user.email,
+        },
+      },
+    );
     return await this.companyModel.softDelete({
       _id: id,
     });

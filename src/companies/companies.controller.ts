@@ -13,7 +13,7 @@ import { CompaniesService } from './companies.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 import { LocalAuthGuard } from 'src/auth/local-auth.guard';
-import { ResponseMessage, User } from 'src/decorator/customize';
+import { Public, ResponseMessage, User } from 'src/decorator/customize';
 import { IUser } from 'src/users/users.interface';
 import mongoose from 'mongoose';
 
@@ -30,6 +30,7 @@ export class CompaniesController {
   }
 
   @Get()
+  @Public()
   @ResponseMessage('Get company with pagination')
   findAll(
     @Query('current') currentPage: string,
@@ -40,6 +41,7 @@ export class CompaniesController {
   }
 
   @Get(':id')
+  @Public()
   findOne(@Param('id') id: string) {
     return this.companiesService.findOne(+id);
   }
@@ -54,7 +56,7 @@ export class CompaniesController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: mongoose.Schema.Types.ObjectId, @User() user: IUser) {
+  remove(@Param('id') id: string, @User() user: IUser) {
     return this.companiesService.remove(id, user);
   }
 }

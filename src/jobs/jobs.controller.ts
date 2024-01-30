@@ -23,6 +23,7 @@ export class JobsController {
     return this.jobsService.create(createJobDto, user);
   }
 
+  @Public()
   @Get()
   @ResponseMessage('Get job with pagination')
   findAll(
@@ -33,6 +34,7 @@ export class JobsController {
     return this.jobsService.findAll(+currentPage, +limit, qs);
   }
 
+  @Public()
   @Get(':id')
   @ResponseMessage('Get job by id')
   findOne(@Param('id') id: string) {
