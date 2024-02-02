@@ -20,7 +20,7 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  @ResponseMessage('Create user with pagination')
+  @ResponseMessage('Create user with')
   create(@Body() createUserDto: CreateUserDto, @User() user: IUser) {
     return this.usersService.create(createUserDto, user);
   }

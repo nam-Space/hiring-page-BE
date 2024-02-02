@@ -39,7 +39,7 @@ export class ResumesController {
 
   @Post('/by-user')
   findByUser(@User() user: IUser) {
-    return this.resumesService.findByUser(user);
+    return this.resumesService.findByUsers(user);
   }
 
   @Patch(':id')
