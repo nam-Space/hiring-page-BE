@@ -7,11 +7,14 @@ import { SoftDeleteModel } from 'soft-delete-plugin-mongoose';
 import { IUser } from 'src/users/users.interface';
 import mongoose from 'mongoose';
 import aqp from 'api-query-params';
+import { User, UserDocument } from 'src/users/schemas/user.schema';
 
 @Injectable()
 export class JobsService {
   constructor(
     @InjectModel(Job.name) private jobModel: SoftDeleteModel<JobDocument>,
+    @InjectModel(User.name)
+    private userModel: SoftDeleteModel<UserDocument>,
   ) {}
 
   checkDate = (timeStart, timeEnd) => {
@@ -59,7 +62,7 @@ export class JobsService {
     };
   }
 
-  async findAll(currentPage: number, limit: number, qs: string) {
+  async findAllJob(currentPage: number, limit: number, qs: string) {
     const { filter, sort, population } = aqp(qs);
 
     delete filter.current;
@@ -67,11 +70,11 @@ export class JobsService {
 
     const offset = (currentPage - 1) * +limit;
     const defaultLimit = limit ? limit : 10;
-    const totalItems = (await this.jobModel.find(filter)).length;
+    const totalItems = (await this.jobModel.find({ ...filter })).length;
     const totalPages = Math.ceil(totalItems / defaultLimit);
 
     const result = await this.jobModel
-      .find(filter)
+      .find({ ...filter })
       .skip(offset)
       .limit(defaultLimit)
       .sort(sort as any)
@@ -89,10 +92,64 @@ export class JobsService {
     };
   }
 
+  async findAll(currentPage: number, limit: number, qs: string, user: IUser) {
+    const { filter, sort, population } = aqp(qs);
+
+    delete filter.current;
+    delete filter.pageSize;
+
+    const currentUser = await this.userModel.findById(user._id);
+
+    const offset = (currentPage - 1) * +limit;
+    const defaultLimit = limit ? limit : 10;
+    let totalItems = (await this.jobModel.find({ ...filter })).length;
+    if (user.role.name === 'HR') {
+      totalItems = (
+        await this.jobModel.find({
+          ...filter,
+          'company._id': currentUser.company._id,
+        })
+      ).length;
+    }
+    const totalPages = Math.ceil(totalItems / defaultLimit);
+
+    let result = await this.jobModel
+      .find({ ...filter })
+      .skip(offset)
+      .limit(defaultLimit)
+      .sort(sort as any)
+      .populate(population)
+      .exec();
+
+    if (user.role.name === 'HR') {
+      result = await this.jobModel
+        .find({
+          ...filter,
+          'company._id': currentUser.company._id,
+        })
+        .skip(offset)
+        .limit(defaultLimit)
+        .sort(sort as any)
+        .populate(population)
+        .exec();
+    }
+
+    return {
+      meta: {
+        current: currentPage, //trang hiện tại
+        pageSize: limit, //số lượng bản ghi đã lấy
+        pages: totalPages, //tổng số trang với điều kiện query
+        total: totalItems, // tổng số phần tử (số bản ghi)
+      },
+      result, //kết quả query
+    };
+  }
+
   async findOne(id: string) {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return 'Id is invalid!';
     }
+
     return await this.jobModel.findOne({ _id: id });
   }
 
@@ -100,6 +157,7 @@ export class JobsService {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return 'Id is invalid!';
     }
+
     const {
       name,
       skills,
@@ -115,6 +173,38 @@ export class JobsService {
     } = updateJobDto;
 
     this.checkDate(new Date(startDate).getTime(), new Date(endDate).getTime());
+
+    const currentUser = await this.userModel.findById(user._id);
+    const job = await this.jobModel.findById(id);
+
+    if (user.role.name === 'HR') {
+      if (job.company._id.toString() === currentUser.company._id.toString()) {
+        return await this.jobModel.updateOne(
+          { _id: id },
+          {
+            name,
+            skills,
+            company,
+            location,
+            salary,
+            quantity,
+            level,
+            description,
+            startDate,
+            endDate,
+            isActive,
+            updatedBy: {
+              _id: user._id,
+              email: user.email,
+            },
+          },
+        );
+      } else {
+        throw new BadRequestException(
+          'HR không để cập nhật Job cho công ty khác!',
+        );
+      }
+    }
 
     return await this.jobModel.updateOne(
       { _id: id },
@@ -139,6 +229,29 @@ export class JobsService {
   }
 
   async remove(id: string, user: IUser) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return 'Id is invalid!';
+    }
+
+    const currentUser = await this.userModel.findById(user._id);
+    const job = await this.jobModel.findById(id);
+
+    if (user.role.name === 'HR') {
+      if (job.company._id.toString() === currentUser.company._id.toString()) {
+        await this.jobModel.updateOne(
+          { _id: id },
+          {
+            deletedBy: {
+              _id: user._id,
+              email: user.email,
+            },
+          },
+        );
+        return await this.jobModel.softDelete({ _id: id });
+      } else {
+        throw new BadRequestException('HR không để xóa Job cho công ty khác!');
+      }
+    }
     await this.jobModel.updateOne(
       { _id: id },
       {

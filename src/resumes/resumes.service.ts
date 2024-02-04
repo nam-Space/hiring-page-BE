@@ -7,12 +7,16 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Resume, ResumeDocument } from './schemas/resume.schema';
 import { SoftDeleteModel } from 'soft-delete-plugin-mongoose';
 import aqp from 'api-query-params';
+import { User, UserDocument } from 'src/users/schemas/user.schema';
 
 @Injectable()
 export class ResumesService {
   constructor(
     @InjectModel(Resume.name)
     private resumeModel: SoftDeleteModel<ResumeDocument>,
+
+    @InjectModel(User.name)
+    private userModel: SoftDeleteModel<UserDocument>,
   ) {}
 
   async create(createResumeDto: CreateUserCvDto, user: IUser) {
@@ -43,25 +47,55 @@ export class ResumesService {
     };
   }
 
-  async findAll(currentPage: number, limit: number, qs: string) {
+  async findAll(currentPage: number, limit: number, qs: string, user: IUser) {
     const { filter, sort, projection, population } = aqp(qs);
 
     delete filter.current;
     delete filter.pageSize;
 
+    const currentUser = await this.userModel.findById(user._id);
+
     const offset = (currentPage - 1) * +limit;
     const defaultLimit = limit ? limit : 10;
-    const totalItems = (await this.resumeModel.find(filter)).length;
+    let totalItems = (
+      await this.resumeModel.find({
+        ...filter,
+      })
+    ).length;
+    if (user.role.name === 'HR') {
+      totalItems = (
+        await this.resumeModel.find({
+          ...filter,
+          companyId: currentUser.company._id,
+        })
+      ).length;
+    }
     const totalPages = Math.ceil(totalItems / defaultLimit);
 
-    const result = await this.resumeModel
-      .find(filter)
+    let result = await this.resumeModel
+      .find({
+        ...filter,
+      })
       .skip(offset)
       .limit(defaultLimit)
       .sort(sort as any)
       .populate(population)
       .select(projection)
       .exec();
+
+    if (user.role.name === 'HR') {
+      result = await this.resumeModel
+        .find({
+          ...filter,
+          companyId: currentUser.company._id,
+        })
+        .skip(offset)
+        .limit(defaultLimit)
+        .sort(sort as any)
+        .populate(population)
+        .select(projection)
+        .exec();
+    }
 
     return {
       meta: {
@@ -102,6 +136,38 @@ export class ResumesService {
   async update(id: string, status: string, user: IUser) {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Id is invalid!');
+    }
+    const currentUser = await this.userModel.findById(user._id);
+    const resume = await this.resumeModel.findById(id);
+    if (user.role.name === 'HR') {
+      if (resume.companyId.toString() === currentUser.company._id.toString()) {
+        return await this.resumeModel.updateOne(
+          {
+            _id: id,
+          },
+          {
+            status,
+            updatedBy: {
+              _id: user._id,
+              email: user.email,
+            },
+            $push: {
+              history: {
+                status,
+                updatedAt: new Date(),
+                updatedBy: {
+                  _id: user._id,
+                  email: user.email,
+                },
+              },
+            },
+          },
+        );
+      } else {
+        throw new BadRequestException(
+          'HR không để cập nhật CV cho công ty khác!',
+        );
+      }
     }
     return await this.resumeModel.updateOne(
       {
