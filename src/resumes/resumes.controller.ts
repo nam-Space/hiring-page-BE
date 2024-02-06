@@ -11,7 +11,7 @@ import {
 import { ResumesService } from './resumes.service';
 import { CreateResumeDto, CreateUserCvDto } from './dto/create-resume.dto';
 import { UpdateResumeDto } from './dto/update-resume.dto';
-import { User } from 'src/decorator/customize';
+import { Public, User } from 'src/decorator/customize';
 import { IUser } from 'src/users/users.interface';
 
 @Controller('resumes')
@@ -36,6 +36,12 @@ export class ResumesController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.resumesService.findOne(id);
+  }
+
+  @Public()
+  @Post('/get-total-resumes')
+  getAllTotalResume() {
+    return this.resumesService.getAllTotalResume();
   }
 
   @Post('/by-user')

@@ -1,10 +1,13 @@
+import { Prop } from '@nestjs/mongoose';
 import { Type } from 'class-transformer';
 import {
   IsEmail,
+  IsEmpty,
   IsMongoId,
   IsNotEmpty,
   IsNotEmptyObject,
   IsObject,
+  IsOptional,
   ValidateNested,
 } from 'class-validator';
 import mongoose from 'mongoose';
@@ -20,6 +23,10 @@ class Company {
 export class CreateUserDto {
   @IsNotEmpty({ message: 'Name không được để trống' })
   name: string;
+
+  @IsOptional()
+  @IsNotEmpty({ message: 'Avatar không được để trống' })
+  avatar: string;
 
   @IsEmail(
     {},

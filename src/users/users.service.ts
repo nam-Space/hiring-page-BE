@@ -29,8 +29,17 @@ export class UsersService {
   };
 
   async create(createUserDto: CreateUserDto, user: IUser) {
-    const { name, email, password, age, gender, address, role, company } =
-      createUserDto;
+    const {
+      name,
+      avatar,
+      email,
+      password,
+      age,
+      gender,
+      address,
+      role,
+      company,
+    } = createUserDto;
 
     const checkUser = await this.userModel.findOne({ email: email });
     if (checkUser) {
@@ -39,6 +48,7 @@ export class UsersService {
 
     const newUser = await this.userModel.create({
       name,
+      avatar,
       email,
       password: this.hashPassword(password),
       age,

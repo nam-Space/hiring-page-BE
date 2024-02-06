@@ -115,6 +115,10 @@ export class ResumesService {
     return await this.resumeModel.findOne({ _id: id });
   }
 
+  async getAllTotalResume() {
+    return await this.resumeModel.find({});
+  }
+
   async findByUsers(user: IUser) {
     return await this.resumeModel
       .find({

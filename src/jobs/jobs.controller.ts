@@ -35,6 +35,22 @@ export class JobsController {
     return this.jobsService.findAllJob(+currentPage, +limit, qs);
   }
 
+  @Public()
+  @Post('/get-jobs-with-user-apply')
+  getJobWithUserApply(
+    @Query('current') currentPage: string,
+    @Query('pageSize') limit: string,
+    @Query() qs: string,
+  ) {
+    return this.jobsService.getJobWithUserApply(+currentPage, +limit, qs);
+  }
+
+  @Public()
+  @Post('/get-total-jobs')
+  getAllTotalResume() {
+    return this.jobsService.getAllTotalJob();
+  }
+
   @Get()
   @ResponseMessage('Get job with pagination')
   findAll(
@@ -46,6 +62,7 @@ export class JobsController {
     return this.jobsService.findAll(+currentPage, +limit, qs, user);
   }
 
+  @Public()
   @Get(':id')
   @ResponseMessage('Get job by id')
   findOne(@Param('id') id: string) {

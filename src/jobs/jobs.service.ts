@@ -8,6 +8,7 @@ import { IUser } from 'src/users/users.interface';
 import mongoose from 'mongoose';
 import aqp from 'api-query-params';
 import { User, UserDocument } from 'src/users/schemas/user.schema';
+import { Resume, ResumeDocument } from 'src/resumes/schemas/resume.schema';
 
 @Injectable()
 export class JobsService {
@@ -15,6 +16,8 @@ export class JobsService {
     @InjectModel(Job.name) private jobModel: SoftDeleteModel<JobDocument>,
     @InjectModel(User.name)
     private userModel: SoftDeleteModel<UserDocument>,
+    @InjectModel(Resume.name)
+    private resumeModel: SoftDeleteModel<ResumeDocument>,
   ) {}
 
   checkDate = (timeStart, timeEnd) => {
@@ -92,6 +95,62 @@ export class JobsService {
     };
   }
 
+  async getJobWithUserApply(currentPage: number, limit: number, qs: string) {
+    const resumes = await this.resumeModel.find({});
+    const mp = new Map();
+    resumes.forEach((resume) => {
+      mp.set(
+        resume.jobId.toString(),
+        mp.get(resume.jobId.toString())
+          ? mp.get(resume.jobId.toString()) + 1
+          : 1,
+      );
+    });
+    const arr = Array.from(mp).sort((a, b) => b[1] - a[1]);
+
+    const { filter, sort, population } = aqp(qs);
+
+    delete filter.current;
+    delete filter.pageSize;
+
+    const offset = currentPage && limit ? (currentPage - 1) * +limit : 0;
+    const defaultLimit = limit ? limit : 10;
+
+    const jobs = await this.jobModel.find({ ...filter });
+
+    const res = [];
+    arr.forEach((item) => {
+      for (let i = 0; i < jobs.length; i++) {
+        if (item[0] === jobs[i]._id.toString()) {
+          res.push({
+            ...jobs[i].toObject(),
+            userApply: item[1],
+          });
+          break;
+        }
+      }
+    });
+
+    const result = res.slice(offset, offset + defaultLimit);
+
+    const totalItems = res.length;
+    const totalPages = Math.ceil(totalItems / defaultLimit);
+
+    return {
+      meta: {
+        current: currentPage, //trang hiện tại
+        pageSize: limit, //số lượng bản ghi đã lấy
+        pages: totalPages, //tổng số trang với điều kiện query
+        total: totalItems, // tổng số phần tử (số bản ghi)
+      },
+      result: result, //kết quả query
+    };
+  }
+
+  async getAllTotalJob() {
+    return await this.jobModel.find({});
+  }
+
   async findAll(currentPage: number, limit: number, qs: string, user: IUser) {
     const { filter, sort, population } = aqp(qs);
 
@@ -147,7 +206,7 @@ export class JobsService {
 
   async findOne(id: string) {
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return 'Id is invalid!';
+      throw new BadRequestException('Id is invalid!');
     }
 
     return await this.jobModel.findOne({ _id: id });
