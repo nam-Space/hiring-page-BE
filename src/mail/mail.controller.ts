@@ -10,7 +10,9 @@ import {
 } from 'src/subscribers/schemas/subscriber.schema';
 import { Job, JobDocument } from 'src/jobs/schemas/job.schema';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('mail')
 @Controller('mail')
 export class MailController {
   constructor(
@@ -22,11 +24,6 @@ export class MailController {
 
     @InjectModel(Job.name) private jobModel: SoftDeleteModel<JobDocument>,
   ) {}
-
-  @Cron('30 * * * * *')
-  testCron() {
-    console.log('alo');
-  }
 
   @Get()
   @Public()
