@@ -9,6 +9,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Subscriber } from 'rxjs';
 import { SubscriberSchema } from 'src/subscribers/schemas/subscriber.schema';
 import { Job, JobSchema } from 'src/jobs/schemas/job.schema';
+import { User, UserSchema } from 'src/users/schemas/user.schema';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { Job, JobSchema } from 'src/jobs/schemas/job.schema';
     MongooseModule.forFeature([
       { name: Subscriber.name, schema: SubscriberSchema },
       { name: Job.name, schema: JobSchema },
+      { name: User.name, schema: UserSchema },
     ]),
   ],
   controllers: [MailController],

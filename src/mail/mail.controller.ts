@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { MailService } from './mail.service';
 import { Public, ResponseMessage } from 'src/decorator/customize';
 import { MailerService } from '@nestjs-modules/mailer';
@@ -11,6 +11,7 @@ import {
 import { Job, JobDocument } from 'src/jobs/schemas/job.schema';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { ApiTags } from '@nestjs/swagger';
+import { GenerateTokenPasswordDto } from './dto/create-mail.dto';
 
 @ApiTags('mail')
 @Controller('mail')
@@ -75,5 +76,16 @@ export class MailController {
         });
       }
     }
+  }
+
+  @Public()
+  @Post('/generate-token-password')
+  @ResponseMessage('Generate token password')
+  async generateTokenPassword(
+    @Body() generateTokenPasswordDto: GenerateTokenPasswordDto,
+  ) {
+    return await this.mailService.generateTokenPassword(
+      generateTokenPasswordDto,
+    );
   }
 }

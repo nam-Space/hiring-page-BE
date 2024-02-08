@@ -84,12 +84,12 @@ export class SubscribersService {
 
   async update(updateSubscriberDto: UpdateSubscriberDto, user: IUser) {
     const { name, email, skills } = updateSubscriberDto;
-    const isExist = await this.subscriberModel.findOne({ email });
-    if (isExist) {
-      throw new BadRequestException(
-        `Email ${email} đã tồn tại trên hệ thống! Xin vui lòng thử lại!`,
-      );
-    }
+    // const isExist = await this.subscriberModel.findOne({ email });
+    // if (isExist) {
+    //   throw new BadRequestException(
+    //     `Email ${email} đã tồn tại trên hệ thống! Xin vui lòng thử lại!`,
+    //   );
+    // }
     return await this.subscriberModel.updateOne(
       { email: user.email },
       {

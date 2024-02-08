@@ -4,7 +4,12 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { CreateUserDto, RegisterUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import {
+  UpdateUserDto,
+  UpdateUserPasswordDto,
+  UpdateUserPasswordLoginDto,
+  UpdateUserProfileHomepageDto,
+} from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { User as UserM, UserDocument } from './schemas/user.schema';
 import mongoose, { Model } from 'mongoose';
@@ -14,6 +19,7 @@ import { IUser } from './users.interface';
 import aqp from 'api-query-params';
 import { Role, RoleDocument } from 'src/roles/schemas/role.schema';
 import { USER_ROLE } from 'src/databases/sample';
+import { GetUserByEmailAndTokenPasswordDto } from './dto/get-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -65,6 +71,21 @@ export class UsersService {
       _id: newUser._id,
       createAt: newUser.createdAt,
     };
+  }
+
+  async getUserEmailAndTokenPassword(
+    getUserByEmailAndTokenPasswordDto: GetUserByEmailAndTokenPasswordDto,
+  ) {
+    const { email, tokenPassword } = getUserByEmailAndTokenPasswordDto;
+    const userDb = await this.userModel
+      .findOne({ email, tokenPassword })
+      .select('-password');
+    if (!userDb) {
+      throw new BadRequestException(
+        'Link đã không còn hiệu lực! Xin vui lòng thử lại sau.',
+      );
+    }
+    return userDb;
   }
 
   async register(registerUserDto: RegisterUserDto) {
@@ -163,6 +184,99 @@ export class UsersService {
         updatedBy: {
           _id: user._id,
           email: user.email,
+        },
+      },
+    );
+  }
+
+  async updateUserProfileHomepage(
+    updateUserProfileHomepageDto: UpdateUserProfileHomepageDto,
+    user: IUser,
+  ) {
+    if (!mongoose.Types.ObjectId.isValid(updateUserProfileHomepageDto._id)) {
+      throw new BadRequestException('User not found');
+    }
+    return await this.userModel.updateOne(
+      { _id: updateUserProfileHomepageDto._id },
+      {
+        ...updateUserProfileHomepageDto,
+        updatedBy: {
+          _id: user._id,
+          email: user.email,
+        },
+      },
+    );
+  }
+
+  async updateUserPassword(
+    updateUserPasswordDto: UpdateUserPasswordDto,
+    user: IUser,
+  ) {
+    if (!mongoose.Types.ObjectId.isValid(updateUserPasswordDto._id)) {
+      throw new BadRequestException('User not found');
+    }
+    const { _id, password, new_password, renew_password } =
+      updateUserPasswordDto;
+
+    const userDb = await this.userModel.findById(_id);
+
+    if (!this.isValidPassword(password, userDb.password)) {
+      throw new BadRequestException('Mật khẩu cũ không chính xác');
+    }
+
+    if (password === new_password) {
+      throw new BadRequestException(
+        'Mật khẩu mới không được trùng mật khẩu cũ',
+      );
+    }
+    if (new_password !== renew_password) {
+      throw new BadRequestException(
+        'Mật khẩu nhập lại phải giống mật khẩu mới',
+      );
+    }
+
+    return await this.userModel.updateOne(
+      { _id },
+      {
+        password: this.hashPassword(new_password),
+        updatedBy: {
+          _id: user._id,
+          email: user.email,
+        },
+      },
+    );
+  }
+
+  async updateUserPasswordForLogin(
+    updateUserPasswordLoginDto: UpdateUserPasswordDto,
+  ) {
+    const { _id, new_password, renew_password } = updateUserPasswordLoginDto;
+
+    if (!mongoose.Types.ObjectId.isValid(_id)) {
+      throw new BadRequestException('User not found');
+    }
+
+    const userDb = await this.userModel.findById(_id);
+
+    if (this.isValidPassword(new_password, userDb.password)) {
+      throw new BadRequestException(
+        'Mật khẩu mới không được trùng mật khẩu cũ',
+      );
+    }
+
+    if (new_password !== renew_password) {
+      throw new BadRequestException(
+        'Mật khẩu nhập lại phải giống mật khẩu mới',
+      );
+    }
+
+    return await this.userModel.updateOne(
+      { _id },
+      {
+        password: this.hashPassword(new_password),
+        updatedBy: {
+          _id: userDb._id,
+          email: userDb.email,
         },
       },
     );

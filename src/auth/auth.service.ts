@@ -39,7 +39,18 @@ export class AuthService {
   }
 
   async login(user: IUser, response: Response) {
-    const { _id, avatar, name, email, role, permissions } = user;
+    const {
+      _id,
+      name,
+      avatar,
+      email,
+      age,
+      gender,
+      address,
+      company,
+      role,
+      permissions,
+    } = user;
     const payload = {
       sub: 'token login',
       iss: 'from server',
@@ -47,6 +58,10 @@ export class AuthService {
       name,
       avatar,
       email,
+      age,
+      gender,
+      address,
+      company,
       role,
     };
 
@@ -67,6 +82,10 @@ export class AuthService {
         name,
         avatar,
         email,
+        age,
+        gender,
+        address,
+        company,
         role,
         permissions,
       },
@@ -99,7 +118,18 @@ export class AuthService {
 
       const user = await this.usersService.findUserByToken(refreshToken);
       if (user) {
-        const { _id, name, avatar, email, role } = user;
+        const {
+          _id,
+          name,
+          avatar,
+          email,
+          age,
+          gender,
+          address,
+          company,
+          role,
+        } = user;
+
         const payload = {
           sub: 'token refresh',
           iss: 'from server',
@@ -107,6 +137,10 @@ export class AuthService {
           name,
           avatar,
           email,
+          age,
+          gender,
+          address,
+          company,
           role,
         };
 
@@ -131,6 +165,10 @@ export class AuthService {
             name,
             avatar,
             email,
+            age,
+            gender,
+            address,
+            company,
             role,
             permissions: temp?.permissions ?? [],
           },

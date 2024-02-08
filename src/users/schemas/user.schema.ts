@@ -39,6 +39,9 @@ export class User {
   @Prop()
   refreshToken: string;
 
+  @Prop()
+  tokenPassword: string;
+
   @Prop({ type: Object })
   createdBy: {
     _id: mongoose.Schema.Types.ObjectId;
