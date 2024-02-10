@@ -12,6 +12,11 @@ export class CreateCompanyDto {
   address: string;
 
   @IsNotEmpty({
+    message: 'Location không được để trống',
+  })
+  location: string;
+
+  @IsNotEmpty({
     message: 'Description không được để trống',
   })
   description: string;

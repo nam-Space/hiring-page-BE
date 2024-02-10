@@ -11,6 +11,9 @@ export class Company {
   @Prop({ required: true })
   address: string;
 
+  @Prop({ required: true })
+  location: string;
+
   @Prop()
   description: string;
 

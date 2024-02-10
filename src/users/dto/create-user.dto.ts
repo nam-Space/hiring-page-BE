@@ -15,9 +15,11 @@ import {
 import mongoose from 'mongoose';
 
 class Company {
+  @IsOptional()
   @IsNotEmpty()
   _id: mongoose.Schema.Types.ObjectId;
 
+  @IsOptional()
   @IsNotEmpty()
   name: string;
 }
@@ -69,9 +71,10 @@ export class CreateUserDto {
   })
   role: mongoose.Schema.Types.ObjectId;
 
+  @IsOptional()
   @IsNotEmptyObject()
   @IsObject()
-  @ValidateNested()
+  // @ValidateNested()
   @Type(() => Company)
   company: Company;
 }

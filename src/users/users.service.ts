@@ -52,6 +52,16 @@ export class UsersService {
       throw new BadRequestException(`Email ${email} đã tồn tại!`);
     }
 
+    const roleDb = await this.roleModel.findById(createUserDto.role);
+
+    if (roleDb.name !== 'NORMAL_USER') {
+      if (!createUserDto?.company?._id || !createUserDto?.company?.name) {
+        throw new BadRequestException(
+          'Đối với người có chức vụ phải có company!',
+        );
+      }
+    }
+
     const newUser = await this.userModel.create({
       name,
       avatar,
@@ -177,6 +187,17 @@ export class UsersService {
     if (!mongoose.Types.ObjectId.isValid(updateUserDto._id)) {
       throw new BadRequestException('User not found');
     }
+
+    const roleDb = await this.roleModel.findById(updateUserDto.role);
+
+    if (roleDb.name !== 'NORMAL_USER') {
+      if (!updateUserDto?.company?._id || !updateUserDto?.company?.name) {
+        throw new BadRequestException(
+          'Đối với người có chức vụ phải có company!',
+        );
+      }
+    }
+
     return await this.userModel.updateOne(
       { _id: updateUserDto._id },
       {
@@ -243,6 +264,7 @@ export class UsersService {
           _id: user._id,
           email: user.email,
         },
+        $unset: { tokenPassword: 1 },
       },
     );
   }
@@ -278,6 +300,7 @@ export class UsersService {
           _id: userDb._id,
           email: userDb.email,
         },
+        $unset: { tokenPassword: 1 },
       },
     );
   }
