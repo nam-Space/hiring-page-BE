@@ -1,8 +1,8 @@
 {
-  "name": "nest-basic-hoidanit",
+  "name": "nest-basic-namnguyen",
   "version": "0.0.1",
-  "description": "https://hoidanit.com.vn/",
-  "author": "Hỏi Dân IT",
+  "description": "https://www.facebook.com/nguyen.viet.nam.372082",
+  "author": "Nam Nguyễn",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
@@ -44,6 +44,7 @@
     "helmet": "^7.1.0",
     "mongoose": "7.1.0",
     "ms": "2.1.3",
+    "nest-basic-namnguyen": "file:",
     "nodemailer": "6.9.3",
     "passport": "0.6.0",
     "passport-jwt": "4.0.1",

@@ -72,8 +72,8 @@ export class DatabasesService implements OnModuleInit {
             role: adminRole?._id,
           },
           {
-            name: "I'm Hỏi Dân IT",
-            email: 'hoidanit@gmail.com',
+            name: "I'm Nam Nguyễn",
+            email: 'namhello2003@gmail.com',
             password: this.userService.hashPassword(
               this.configService.get<string>('INIT_PASSWORD'),
             ),
