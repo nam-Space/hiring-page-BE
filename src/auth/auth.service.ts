@@ -71,6 +71,8 @@ export class AuthService {
 
     response.cookie('refresh_token', refresh_token, {
       httpOnly: true,
+      secure: true,
+      sameSite: 'none',
       maxAge: ms(this.configService.get<string>('JWT_REFRESH_EXPIRE')),
     });
 
@@ -154,6 +156,8 @@ export class AuthService {
         response.clearCookie('refresh_token');
         response.cookie('refresh_token', refresh_token, {
           httpOnly: true,
+          secure: true,
+          sameSite: 'none',
           maxAge: ms(this.configService.get<string>('JWT_REFRESH_EXPIRE')),
         });
 
@@ -187,7 +191,11 @@ export class AuthService {
 
   logout = async (response: Response, user: IUser) => {
     await this.usersService.updateUserToken('', user._id);
-    response.clearCookie('refresh_token');
+    response.clearCookie('refresh_token', {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+    });
     return 'ok';
   };
 }
