@@ -20,7 +20,6 @@ import { MailModule } from './mail/mail.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { HealthModule } from './health/health.module';
-import { CronService } from './cron/cron.service';
 
 @Module({
   imports: [
@@ -57,6 +56,6 @@ import { CronService } from './cron/cron.service';
     HealthModule,
   ],
   controllers: [AppController],
-  providers: [AppService, CronService],
+  providers: [AppService],
 })
 export class AppModule {}
